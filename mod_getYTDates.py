@@ -106,7 +106,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from tqdm.notebook import tqdm
 
 client_cred_manager = SpotifyClientCredentials(client_id="7f5bc70afe3a40c58dbfb3c303845ccb",
-                                               client_secret="e3f5eb2683f5498fa62f54119e7182cf")
+                                               client_secret="revoked")
 
 sp = spotipy.Spotify(client_credentials_manager=client_cred_manager)
 
