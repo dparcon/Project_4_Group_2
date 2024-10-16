@@ -1,6 +1,8 @@
 ## Some routines for importing into main notebook, for retrieving release
 ## dates from YouTube for use in lookup and subsequent analysis.
 
+import pandas as pd
+
 from youtubesearchpython import VideosSearch, ResultMode, Video
 from tqdm.notebook import tqdm
 from bs4 import BeautifulSoup
@@ -11,7 +13,9 @@ import requests
 import re
 from googleapiclient.discovery import build
 
-API_KEY = "test"
+import time
+
+API_KEY = "AIzaSyAgqZ4rPD2b3xADN3208YvfuLacN4s6_uA"
 youtube = build('youtube', 'v3', developerKey=API_KEY)
 
 def getUploadDateByAPI(video_id: str):
@@ -55,16 +59,21 @@ def getYTDates(df, write_file=False):
     #getUploadDate(trimmed_df['url_youtube'])
     
     for i, row in tqdm(trimmed_df.iterrows(), total=trimmed_df.shape[0]):
-        ret = getUploadDateByAPI(row['url_youtube'][-11:])
-        if(ret == None):
-            #print(f"Date retrieval failed at index {i}")
-            print(i, end=" ")
-            bad_row_indices.append(i)
+        try:
+            ret = getUploadDateByAPI(row['url_youtube'][-11:])
+        except Exception as e:
+            print(f"Encountered {type(e)} at {i}")
             continue
-        vid_ids.append(row['url_youtube'][-11:])
-        
-        date_obj = datetime.strptime(ret[:10], "%Y-%m-%d").date()
-        vid_dates.append(date_obj)
+        else:
+            if(ret == None):
+                #print(f"Date retrieval failed at index {i}")
+                print(i, end=" ")
+                bad_row_indices.append(i)
+                continue
+            vid_ids.append(row['url_youtube'][-11:])
+            
+            date_obj = datetime.strptime(ret[:10], "%Y-%m-%d").date()
+            vid_dates.append(date_obj)
         #print(row['url_youtube'])
     
     upload_date_lookup_df = pd.DataFrame()
@@ -72,10 +81,37 @@ def getYTDates(df, write_file=False):
     upload_date_lookup_df['upload_date'] = vid_dates
 
     if write_file == True:
-        upload_date_lookup_df.to_csv("./debug/upload_date_volatile.csv")
+        timestr = time.strftime("%Y%m%d-%H%M%S") # add timestamp so no overwrites
+        write_file_name = "./debug/upload_date_" + timestr + ".csv"
+        upload_date_lookup_df.to_csv(write_file_name)
 
     return upload_date_lookup_df
 
+
+def calcIndexLastRetrieved(calc_df, existing_data):
+    existing_data_df = pd.read_csv(existing_data)
+    #last_row = existing_df.tail(1)
+
+    #vid_id = last_row['vid_id']
+    vid_id = str(existing_data_df.iloc[-1]['vid_id'])
+
+    ret_val = None
+    
+    for i, row in calc_df.iterrows():
+        if vid_id in row['url_youtube']:
+            ret_val = i
+            break
+
+    if ret_val == None:
+        return None
+        
+    return ret_val
+
+#def continueGetYTDates(df, write_file=False):
+#    return
+    
+
+    
 ## Previous strategies/APIs attempted
 ##
 
