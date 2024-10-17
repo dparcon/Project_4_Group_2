@@ -15,7 +15,7 @@ from googleapiclient.discovery import build
 
 import time
 
-API_KEY = "AIzaSyAgqZ4rPD2b3xADN3208YvfuLacN4s6_uA"
+API_KEY = ""
 youtube = build('youtube', 'v3', developerKey=API_KEY)
 
 def getUploadDateByAPI(video_id: str):
